@@ -1,0 +1,39 @@
+name: Öffentliche Vergabe API Diagnose-Test
+
+on:
+  # Ermöglicht es dir, das Skript weiterhin JEDERZEIT manuell zu starten
+  workflow_dispatch:
+
+  # Die 3 verschiedenen Zeiten über krumme Cronjobs (Achtung: GitHub läuft auf UTC-Zeit!)
+  schedule:
+    - cron: '12 2 * * *'   # 04:12 Uhr deutsche Sommerzeit (Nacht-Test)
+    - cron: '34 9 * * *'   # 11:34 Uhr deutsche Sommerzeit (Mittags-Test)
+    - cron: '47 17 * * *'  # 19:47 Uhr deutsche Sommerzeit (Abend-Test)
+
+jobs:
+  run-diagnose:
+    runs-name: API-Test Lauf
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Warte zufällige Zeit (Bricht die .000 Sekunden Bot-Erkennung der WAF)
+        run: |
+          DELAY=$((1 + RANDOM % 90))
+          echo "Warte absichtlich für $DELAY Sekunden vor dem API-Aufruf..."
+          sleep $DELAY
+
+      - name: Starte Diagnose-Skript
+        run: python diagnose.py
