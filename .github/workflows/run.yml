@@ -12,7 +12,7 @@ on:
 
 jobs:
   run-diagnose:
-    runs-name: API-Test Lauf
+    run-name: API-Test Lauf
     runs-on: ubuntu-latest
 
     steps:
