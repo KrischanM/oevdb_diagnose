@@ -30,7 +30,7 @@ try:
     if response.status_code == 200:
         print("[ERFOLG] Daten erfolgreich abgerufen!")
         # Zeige die ersten 200 Zeichen der JSON-Antwort zur Kontrolle
-        print(f"[VORSCHAU]: {response.text[:200]}...")
+        print(f"[VORSCHAU]: {response.text[:800]}...")
 
     # Fehlerfall (WAF, Block, Rate-Limit)
     else:
@@ -40,7 +40,7 @@ try:
         print("=== SERVER ANTWORT-HEADER ===")
         print(json.dumps(dict(response.headers), indent=2))
         print("=== BODY VORSCHAU ===")
-        print(response.text[:500])
+        print(response.text[:1000])
 
 except requests.exceptions.Timeout:
     print("[FEHLER] Timeout! Der Server hat gar nicht geantwortet (IP-Drop?).")
