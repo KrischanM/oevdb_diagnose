@@ -9,7 +9,7 @@ print(f"=== DIAGNOSE START ===")
 print(f"[ZEIT] Skript feuert um: {jetzt}")
 
 # Deine Wunsch-URL für den Test
-URL = "https://oeffentlichevergabe.de"
+URL = "https://oeffentlichevergabe.de/api/notice-exports?pubDay=2023-12-24"
 
 # Wir bauen einen soliden Browser-Header nach, um nicht sofort aufzufallen
 headers = {
