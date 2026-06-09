@@ -9,7 +9,9 @@ print(f"=== DIAGNOSE START ===")
 print(f"[ZEIT] Skript feuert um: {jetzt}")
 
 # Deine Wunsch-URL für den Test
-URL = "https://oeffentlichevergabe.de/api/notice-exports?pubDay=2023-12-24"
+base_api = "https://oeffentlichevergabe.de/api/notice-exports"
+params = {"pubDay": "2023-12-24", "format": "ocds.zip"}
+
 
 # Wir bauen einen soliden Browser-Header nach, um nicht sofort aufzufallen
 headers = {
@@ -22,7 +24,7 @@ headers = {
 
 try:
     print(f"[INFO] Sende Anfrage an: {URL}")
-    response = requests.get(URL, headers=headers, timeout=20)
+    response = requests.get(URL,params=params, headers=headers, timeout=20)
 
     print(f"[STATUS] HTTP-Code vom Server: {response.status_code}")
 
