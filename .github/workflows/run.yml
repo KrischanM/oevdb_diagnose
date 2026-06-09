@@ -34,7 +34,7 @@ jobs:
 
       - name: Warte zufällige Zeit (Bricht die .000 Sekunden Bot-Erkennung der WAF)
         run: |
-          DELAY=$((1 + RANDOM % 20))
+          DELAY=$((1 + RANDOM % 44))
           echo "Warte absichtlich für $DELAY Sekunden vor dem API-Aufruf..."
           sleep $DELAY
 
