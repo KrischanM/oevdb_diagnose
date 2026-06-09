@@ -24,7 +24,7 @@ headers = {
 
 try:
     print(f"[INFO] Sende Anfrage an: {URL}")
-    response = requests.get(URL,params=params, headers=headers, timeout=20)
+    response = requests.get(base_api,params=params, headers=headers, timeout=20)
 
     print(f"[STATUS] HTTP-Code vom Server: {response.status_code}")
 
