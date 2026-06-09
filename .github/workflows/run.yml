@@ -1,11 +1,14 @@
 name: Öffentliche Vergabe API Diagnose-Test
-
+run-name: API-Test Lauf (#${{ github.run_number }})
 on:
   # Ermöglicht es dir, das Skript weiterhin JEDERZEIT manuell zu starten
   workflow_dispatch:
 
   # Die 3 verschiedenen Zeiten über krumme Cronjobs (Achtung: GitHub läuft auf UTC-Zeit!)
   schedule:
+    - cron: '03 22 * * *'   # 00:03 Uhr deutsche Sommerzeit (Sehr nah dran, weicht der .000 Sekunde aus)
+    - cron: '18 22 * * *'   # 00:18 Uhr deutsche Sommerzeit (Falls die erste Welle noch den Server blockiert)
+    - cron: '37 22 * * *'   # 00:37 Uhr deutsche Sommerzeit (Sicherheits-Lauf in einer absolut ruhigen Minute)
     - cron: '12 2 * * *'   # 04:12 Uhr deutsche Sommerzeit (Nacht-Test)
     - cron: '34 9 * * *'   # 11:34 Uhr deutsche Sommerzeit (Mittags-Test)
     - cron: '47 17 * * *'  # 19:47 Uhr deutsche Sommerzeit (Abend-Test)
@@ -27,7 +30,7 @@ jobs:
       - name: Abhängigkeiten installieren
         run: |
           python -m pip install --upgrade pip
-          pip install requests
+          pip install httpx[http2] brotli
 
       - name: Warte zufällige Zeit (Bricht die .000 Sekunden Bot-Erkennung der WAF)
         run: |
