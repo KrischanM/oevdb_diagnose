@@ -1,10 +1,9 @@
-name: Öffentliche Vergabe API Diagnose-Test
+name: API Doppel-Vergleichstest
 run-name: API-Test Lauf (#${{ github.run_number }})
-on:
-  # Ermöglicht es dir, das Skript weiterhin JEDERZEIT manuell zu starten
-  workflow_dispatch:
 
-  # Die 3 verschiedenen Zeiten über krumme Cronjobs (Achtung: GitHub läuft auf UTC-Zeit!)
+on:
+  workflow_dispatch: # Für deinen manuellen Testknopf
+
   schedule:
     - cron: '03 22 * * *'   # 00:03 Uhr deutsche Sommerzeit (Sehr nah dran, weicht der .000 Sekunde aus)
     - cron: '18 22 * * *'   # 00:18 Uhr deutsche Sommerzeit (Falls die erste Welle noch den Server blockiert)
@@ -14,8 +13,7 @@ on:
     - cron: '47 17 * * *'  # 19:47 Uhr deutsche Sommerzeit (Abend-Test)
 
 jobs:
-  run-diagnose:
-    
+  run-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,16 +25,19 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Abhängigkeiten installieren
+      - name: Alle Abhängigkeiten für beide Tests installieren
         run: |
           python -m pip install --upgrade pip
-          pip install httpx[http2] brotli
+          pip install requests httpx[http2] brotli
 
-      - name: Warte zufällige Zeit (Bricht die .000 Sekunden Bot-Erkennung der WAF)
+      - name: Warte zufällige Zeit (Bricht die .000 Sekunden Bot-Erkennung)
         run: |
           DELAY=$((1 + RANDOM % 44))
-          echo "Warte absichtlich für $DELAY Sekunden vor dem API-Aufruf..."
+          echo "Warte absichtlich für $DELAY Sekunden..."
           sleep $DELAY
 
-      - name: Starte Diagnose-Skript
-        run: python diagnose.py
+      - name: Starte 1. Test (Requests)
+        run: python diagnose_requests.py
+
+      - name: Starte 2. Test (Httpx)
+        run: python diagnose_httpx.py
