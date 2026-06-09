@@ -1,54 +1,45 @@
-import sys
 from datetime import datetime
 import json
-import requests
+import httpx  # Ersetzt requests für HTTP/2 Support
 
-# Exakte Startzeit protokollieren (wichtig für die Cron-Analyse)
 jetzt = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-print(f"=== DIAGNOSE START ===")
+print(f"=== MODERNISIERTE DIAGNOSE START ===")
 print(f"[ZEIT] Skript feuert um: {jetzt}")
 
-# Deine Wunsch-URL für den Test
 base_api = "https://oeffentlichevergabe.de/api/notice-exports"
 params = {"pubDay": "2023-12-24", "format": "ocds.zip"}
 
-# Wir bauen einen soliden Browser-Header nach, um nicht sofort aufzufallen
+# Wir fügen die Komprimierungs-Header hinzu, die dein Firefox nutzt
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0",
     "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Accept-Language": "de-DE,de;q=0.9",
+    "Accept-Encoding": "gzip, deflate, br",  # Zwingend für Brotli!
     "Referer": "https://oeffentlichevergabe.de",
     "Origin": "https://oeffentlichevergabe.de",
 }
 
 try:
-    print(f"[INFO] Sende HEAD-Anfrage an: {base_api}")
-    response = requests.head(base_api, params=params, headers=headers, timeout=20)
+    print(f"[INFO] Sende HEAD-Anfrage via HTTP/2 an: {base_api}")
 
-    print(f"[STATUS] HTTP-Code vom Server: {response.status_code}")
+    # http2=True aktiviert die moderne Browser-Verbindung
+    with httpx.Client(http2=True) as client:
+        response = client.head(base_api, params=params, headers=headers, timeout=20.0)
 
-    # Falls der Server kein HEAD unterstützt, weichen wir auf ein schnelles GET aus
-    if response.status_code == 405:
-        print("[INFO] HEAD nicht erlaubt, weiche auf GET aus...")
-        response = requests.get(base_api, params=params, headers=headers, timeout=20, stream=True)
+        print(f"[STATUS] HTTP-Code vom Server: {response.status_code}")
+        print(f"[PROTOKOLL] Genutzte HTTP-Version: {response.http_version}")
 
-    # Erfolgsfall
-    if response.status_code == 200:
-        print("[ERFOLG] Daten erfolgreich abgerufen!")
-        print("=== SERVER ANTWORT-HEADER (ERFOLG) ===")
-        print(json.dumps(dict(response.headers), indent=2))
+        if response.status_code == 200:
+            print("[ERFOLG] Daten erfolgreich abgerufen!")
+            print("=== SERVER ANTWORT-HEADER ===")
+            print(json.dumps(dict(response.headers), indent=2))
+        else:
+            print(f"[ALARM] Status-Code ist {response.status_code}")
+            # Falls HEAD fehlschlägt, holen wir zur Diagnose den GET-Body
+            res_get = client.get(base_api, params=params, headers=headers, timeout=20.0)
+            print(res_get.text[:500])
 
-    # Fehlerfall (WAF, Block, Rate-Limit)
-    else:
-        print(f"[ALARM] Fehler festgestellt! Status-Code ist nicht 200.")
-        print("=== SERVER ANTWORT-HEADER (FEHLER) ===")
-        print(json.dumps(dict(response.headers), indent=2))
-        print("=== BODY VORSCHAU ===")
-        print(response.text[:1000])
-
-except requests.exceptions.Timeout:
-    print("[FEHLER] Timeout! Der Server hat gar nicht geantwortet (IP-Drop?).")
-except requests.exceptions.RequestException as e:
-    print(f"[NETZWERKFEHLER] Verbindung fehlgeschlagen: {e}")
+except Exception as e:
+    print(f"[FEHLER] HTTP/2 Abfrage fehlgeschlagen: {e}")
 
 print("=== DIAGNOSE ENDE ===")
